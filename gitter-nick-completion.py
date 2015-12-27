@@ -7,11 +7,15 @@ __module_description__ = "Uses @nick for nick completion on Gitter"
 __author__ = "MaurizioB"
 
 import hexchat, re
-server = '.gitter.im'
+server = 'gitter.im'
 nick_check = re.compile(r'[^a-zA-Z0-9\-\[\]\\\^\{\}]').search
 cx_list = {}
+tracked_keys = ['65288', #backspace
+                ]
+ignored_keys = ['65307',
+                ]
 
-def test(word, word_eol, userdata):
+def check_completion(word, word_eol, userdata):
     cx = hexchat.get_context()
     if cx.get_info('server').endswith(server) and [chan.type for chan in hexchat.get_list('channels') if chan.context==hexchat.get_context()][0] == 2:
         inputbox = cx.get_info('inputbox')
@@ -34,7 +38,6 @@ def test(word, word_eol, userdata):
                     nick = user.nick
                     if nick.lower().startswith(typed.lower()):
                         matching.append(nick)
-                    #print '{}: {}'.format(nick, hexchat.nickcmp(nick, typed))
             if not len(matching):
                 #empty list
                 if cx_list.get(cx.get_info('channel')):
@@ -44,6 +47,9 @@ def test(word, word_eol, userdata):
             hexchat.command('SETTEXT @{} '.format(matching[cycle]))
             hexchat.command('SETCURSOR {}'.format(len(cx.get_info('inputbox'))))
             return hexchat.EAT_ALL
+        #ignoring mod and "empty" keys, but let pass backspace to clear the context dictionary
+        elif (not int(word[3]) and not word[0] in tracked_keys) or word[0] in ignored_keys:
+            return hexchat.EAT_NONE
         else:
             #reset context for channel
             if cx_list.get(cx.get_info('channel')):
@@ -52,4 +58,4 @@ def test(word, word_eol, userdata):
     else:
         return hexchat.EAT_NONE
 
-hexchat.hook_print('Key Press', test)
+hexchat.hook_print('Key Press', check_completion)
