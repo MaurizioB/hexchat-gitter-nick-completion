@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*
 
 __module_name__ = "Gitter Nick Completion support"
-__module_version__ = "0.2"
+__module_version__ = "0.3"
 __module_description__ = "Uses @nick for nick completion on Gitter"
 __author__ = "MaurizioB"
 
@@ -12,7 +12,7 @@ nick_check = re.compile(r'[^a-zA-Z0-9\-\[\]\\\^\{\}]').search
 cx_list = {}
 tracked_keys = ['65288', #backspace
                 ]
-ignored_keys = ['65307',
+ignored_keys = ['65307', #esc
                 ]
 
 def check_completion(word, word_eol, userdata):
@@ -30,6 +30,7 @@ def check_completion(word, word_eol, userdata):
                     cycle = 0
             else:
                 typed = cx.get_info('inputbox')
+                if typed.startswith('@'): typed = typed[1:]
                 if bool(nick_check(typed)):
                     return hexchat.EAT_NONE
                 cycle = 0
